@@ -1,5 +1,5 @@
 // models/User.js
-import mongoose from "moongose";
+import mongoose from "mongoose";
 
 const socialProfilesSchema = new mongoose.Schema({
   google: {
@@ -75,9 +75,5 @@ const userSchema = new mongoose.Schema(
     timestamps: true, // add createdAt and updatedAt
   }
 );
-
-// index email & username for fast querying
-userSchema.index({ email: 1 });
-userSchema.index({ username: 1 });
 
 export default mongoose.model("User", userSchema);
