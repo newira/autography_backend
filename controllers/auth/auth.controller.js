@@ -79,10 +79,46 @@ const register_with_mail_password = async (req, res) => {
 // Log in with email and password
 // ----------------------------------------------------------------------------------------
 
-const sign_in_with_gmail_password = (req, res) => {
+const sign_in_with_gmail_password = async (req, res) => {
   try {
+    const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      return sendResponse(res, 400, false, "Email and password are required!");
+    }
+
+    // Find the user
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return sendResponse(res, 400, false, "Email or password is incorrect!");
+    }
+
+    // Compare password
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return sendResponse(res, 400, false, "Email or password is incorrect!");
+    }
+
+    // Save session
+    req.session.user = {
+      id: user._id,
+      email: user.email,
+    };
+
+    return sendResponse(res, 200, true, "Login successful!", {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+    });
   } catch (error) {
-    sendResponse(res, 500, false, error.message || "Internal Server Error!");
+    return sendResponse(
+      res,
+      500,
+      false,
+      error.message || "Internal Server Error!"
+    );
   }
 };
 
@@ -132,8 +168,8 @@ const verify_email = async (req, res) => {
 
       // Set new permanent session
       req.session.user = {
-        id: userData.id,
-        email: userData.email,
+        id: user.id,
+        email: user.email,
       };
 
       user.isEmailVerified = true;

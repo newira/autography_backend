@@ -1,5 +1,6 @@
-// models/User.js
 import mongoose from "mongoose";
+
+import bcrypt from "bcrypt";
 
 const socialProfilesSchema = new mongoose.Schema({
   google: {
@@ -75,5 +76,14 @@ const userSchema = new mongoose.Schema(
     timestamps: true, // add createdAt and updatedAt
   }
 );
+
+userSchema.methods.comparePassword = async function (plainPassword) {
+  try {
+    return await bcrypt.compare(plainPassword, this.passwordHash);
+  } catch (error) {
+    console.log("Failed to compare password in bcrypt")
+   return false;
+  }
+};
 
 export default mongoose.model("User", userSchema);
