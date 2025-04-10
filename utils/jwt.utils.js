@@ -3,16 +3,18 @@ import jwt from "jsonwebtoken";
 const generateToken = (payload, expiresIn = "10m") => {
   if (!process.env.JWT_SECRET) {
     console.log("JWT_SECRET is null or undefined");
-    return null;
+    return { success: false, message: "Token generation failed!" };
   }
 
-  const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn,
-  });
-
-  return token;
+  try {
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn,
+    });
+    return { success: true, token };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
 };
-
 const verifyToken = (token) => {
   if (!process.env.JWT_SECRET) {
     console.log("JWT_SECRET is null or undefined");

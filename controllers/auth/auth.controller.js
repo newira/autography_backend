@@ -43,17 +43,20 @@ const register_with_mail_password = async (req, res) => {
     req.session.tempSession = { id: newUser._id, email: newUser.email };
     req.session.cookie.maxAge = 10 * 60 * 1000; // 10 mins
 
-    const token = generateToken({ email: newUser.email });
-    const encodedToken = encodeURIComponent(token);
+    const result = generateToken({ email: newUser.email });
 
-    const link = `http://localhost:3000/user/verify_email?token=${encodedToken}`;
+    if (result.success) {
+      const encodedToken = encodeURIComponent(result.token);
 
-    await sendEmail({
-      to: newUser.email,
-      subject: "Email verification for verified account on Autography",
-      text: "Please click the link to verify your email:",
-      html: `<a href="${link}">${link}</a>`,
-    });
+      const link = `http://localhost:3000/user/verify_email?token=${encodedToken}`;
+
+      await sendEmail({
+        to: newUser.email,
+        subject: "Email verification for verified account on Autography",
+        text: "Please click the link to verify your email:",
+        html: `<a href="${link}">${link}</a>`,
+      });
+    }
 
     // Send success response
     return sendResponse(res, 200, true, "User registered successfully!", {
