@@ -9,7 +9,7 @@ import {
 } from "../../controllers/auth/auth.controller.js";
 
 // auth routes
-router.post("/register_with_gmail_password", register_with_mail_password);
+router.post("/register_with_mail_password", register_with_mail_password);
 router.post("/sign_in_with_gmail_password", sign_in_with_gmail_password);
 router.get("/verify_email", verify_email);
 

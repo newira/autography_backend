@@ -8,7 +8,7 @@ import sendEmail from "../../utils/mailSender.utils.js";
 import { generateToken, verifyToken } from "../../utils/jwt.utils.js";
 
 // ----------------------------------------------------------------------------------------
-// Register with email and password 
+// Register with email and password
 // ----------------------------------------------------------------------------------------
 
 const register_with_mail_password = async (req, res) => {
@@ -49,7 +49,7 @@ const register_with_mail_password = async (req, res) => {
     const link = `http://localhost:3000/user/verify_email?token=${encodedToken}`;
 
     await sendEmail({
-      to: "just.pushkardeep@gmail.com",
+      to: newUser.email,
       subject: "Email verification for verified account on Autography",
       text: "Please click the link to verify your email:",
       html: `<a href="${link}">${link}</a>`,
@@ -73,7 +73,7 @@ const register_with_mail_password = async (req, res) => {
 };
 
 // ----------------------------------------------------------------------------------------
-// Log in with email and password 
+// Log in with email and password
 // ----------------------------------------------------------------------------------------
 
 const sign_in_with_gmail_password = (req, res) => {
@@ -87,7 +87,7 @@ const sign_in_with_gmail_password = (req, res) => {
 // Session base email verification
 // ----------------------------------------------------------------------------------------
 
-const verify_email = (req, res) => {
+const verify_email = async (req, res) => {
   try {
     const { token } = req.query;
 
@@ -98,8 +98,6 @@ const verify_email = (req, res) => {
 
     // Verify the token
     const result = verifyToken(token);
-
-    console.log(req.session)
 
     if (!result.success) {
       return res.status(400).send("Invalid or expired token!");
@@ -112,13 +110,19 @@ const verify_email = (req, res) => {
       return res.status(400).send("Session expired or invalid!");
     }
 
+    const user = await userModel.findOne({ email: userData.email });
+
+    if (!user) {
+      return res.status(400).send("User not found!");
+    }
+
     // Compare email
-    if (req.session.tempSession.email !== userData.email) {
+    if (req.session.tempSession.email !== user.email) {
       return res.status(400).send("Credentials does not match!");
     }
 
     // Regenerate session
-    req.session.regenerate((err) => {
+    req.session.regenerate(async (err) => {
       if (err) {
         return res.status(500).send("Failed to generate session.");
       }
@@ -128,6 +132,9 @@ const verify_email = (req, res) => {
         id: userData.id,
         email: userData.email,
       };
+
+      user.isEmailVerified = true;
+      await user.save();
 
       return res.status(200).send("Email successfully verified!");
     });
